@@ -21,6 +21,7 @@ interface SentimentResult {
   sentiment: Sentiment;
   score: number;
   timestamp: number;
+  keywords?: string[];
 }
 
 type ViewMode = 'feed' | 'split';
@@ -33,46 +34,47 @@ export default function TweetSentimentAnalyzer() {
   const [selectedResult, setSelectedResult] = useState<SentimentResult | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('feed');
 
-  const clampScore = (n: number) => Math.max(-100, Math.min(100, Math.round(n)));
-
-  const analyzeTweet = async () => {
+  const analyzeTweet = () => {
     if (!tweetText.trim()) {
       setError('Please enter some text to analyze.');
       return;
     }
-
+  
     setError(null);
     setIsLoading(true);
-
-    try {
-      await new Promise((r) => setTimeout(r, 800));
-
-      const text = tweetText.toLowerCase();
-      let score = 0;
-      if (text.includes('love') || text.includes('great') || text.includes('awesome')) score += 45;
-      if (text.includes('like') || text.includes('nice')) score += 15;
-      if (text.includes('hate') || text.includes('terrible') || text.includes('awful')) score -= 55;
-      if (text.includes('smile') || text.includes('happy')) score += 10;
-      if (text.includes('angry') || text.includes('mad')) score -= 15;
-
-      score = clampScore(score + Math.round((Math.random() - 0.5) * 18));
-      const sentiment: Sentiment = score > 10 ? 'positive' : score < -10 ? 'negative' : 'neutral';
-
-      const newResult: SentimentResult = {
-        id: Date.now().toString(),
-        text: tweetText,
-        sentiment,
-        score,
-        timestamp: Date.now(),
-      };
-
-      setResults((prev) => [newResult, ...prev]);
-      setTweetText('');
-    } catch {
-      setError('Analysis failed. Try again.');
-    } finally {
-      setIsLoading(false);
-    }
+  
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'http://127.0.0.1:5000/analyze', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+  
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          const score = data.score;
+          const keywords = data.keywords || [];
+  
+          const sentiment: Sentiment = score > 10 ? 'positive' : score < -10 ? 'negative' : 'neutral';
+  
+          const newResult: SentimentResult = {
+            id: Date.now().toString(),
+            text: tweetText,
+            sentiment,
+            score,
+            keywords,
+            timestamp: Date.now(),
+          };
+  
+          setResults(prev => [newResult, ...prev]);
+          setTweetText('');
+        } else {
+          setError('Failed to connect to backend. Is Flask running?');
+        }
+        setIsLoading(false);
+      }
+    };
+  
+    xhr.send(JSON.stringify({ tweet: tweetText }));
   };
 
   const openSplitView = (result: SentimentResult) => {
@@ -112,12 +114,11 @@ export default function TweetSentimentAnalyzer() {
           onOpenResult={openSplitView}
         />
       </div>
-      
+
       {/* Split View (RIGHT SLIDE IN)*/}
       <div
         className={`fixed inset-y-0 right-0 top-0 max-w-7xl w-full bg-white shadow-2xl border-l transition-transform duration-500 ease-out z-50 
-          ${viewMode === 'split' ? 'translate-x-0' : 'translate-x-full'}`
-        }
+          ${viewMode === 'split' ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <button
           onClick={closeSplitView}
@@ -125,7 +126,7 @@ export default function TweetSentimentAnalyzer() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        
+
         {selectedResult && <SplitDetailView result={selectedResult} />}
       </div>
     </div>
@@ -243,7 +244,7 @@ const ResultTweet: React.FC<{
               <span className="font-bold text-gray-900">Sentiment AI</span>
               <span className="text-gray-500">@sentiment_ai · {timeAgo}</span>
             </div>
-            <p className="text-gray-900 mb-3 whitespace-pre-wrap">"{result.text}"</p>
+            <p className="text-gray-900 mb-3 whitespace-pre-wrap">{result.text}</p>
 
             <div className="flex items-center gap-4">
               <SentimentBadge result={result} />
@@ -251,6 +252,17 @@ const ResultTweet: React.FC<{
                 {result.score > 0 ? '+' : ''}{result.score}
               </span>
             </div>
+
+            {/* Optional: Show keywords if returned */}
+            {result.keywords && result.keywords.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {result.keywords.map((kw) => (
+                  <span key={kw} className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                    {kw}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -342,6 +354,20 @@ const SplitDetailView: React.FC<{ result: SentimentResult }> = ({ result }) => {
                 {result.score > 0 ? '+' : ''}{result.score}
               </div>
               <p className="text-gray-600 text-lg">Sentiment Score</p>
+
+              {/* Optional: Keywords in detail view */}
+              {result.keywords && result.keywords.length > 0 && (
+                <div className="mt-10">
+                  <p className="text-sm text-gray-600 mb-3">Top Keywords</p>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {result.keywords.map((kw) => (
+                      <span key={kw} className="px-4 py-2 bg-white rounded-full shadow text-sm font-medium">
+                        {kw}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="mt-10 h-4 bg-gray-300 rounded-full overflow-hidden">
                 <div
