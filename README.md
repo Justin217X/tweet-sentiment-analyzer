@@ -1,73 +1,45 @@
-# React + TypeScript + Vite
+# Tweet Sentiment Analyzer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack, real-time Twitter-style sentiment analysis app powered by my own trained machine learning model.
 
-Currently, two official plugins are available:
+- **Frontend**: React + TypeScript + Tailwind CSS + Lucide icons (Vite)
+- **Backend**: Python Flask serving a custom-trained Multinomial Naive Bayes model with TF-IDF (2-grams)
+- **Features**:
+  - Instant sentiment scoring (-100 to +100)
+  - Live keyword extraction directly from TF-IDF weights
+  - Beautiful Twitter-like feed with split-view detail
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Setup & Running the Project
 
-## React Compiler
+### 1. Backend (Flask + ML Model)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+cd backend
 
-## Expanding the ESLint configuration
+# Create and activate virtual environment (only needed first time)
+python3 -m venv venv_good
+source venv_good/bin/activate
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+# Install dependencies (only needed first time or after requirements change)
+pip install -r requirements.txt
+# or manually: pip install flask flask-cors joblib numpy scikit-learn
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start the Flask server
+python app.py
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+-> Server will run at http://127.0.0.1:5000
+Keep this terminal open.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Frontend (React App – Vite project in root)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+In a new terminal tab (from the project root):
+
+# Make sure you're in the main project folder (where package.json is)
+
+npm install # Only needed first time or after package changes
+
+# Start the development server
+
+npm run dev
+-> Open the URL shown in the terminal (usually http://localhost:5173)
