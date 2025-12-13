@@ -31,15 +31,15 @@ python app.py
 -> Server will run at http://127.0.0.1:5000
 Keep this terminal open.
 
-### Frontend (React App – Vite project in root)
+### 2. Frontend (React App – Vite project in root)
 
 In a new terminal tab (from the project root):
 
+```bash
 # Make sure you're in the main project folder (where package.json is)
-
 npm install # Only needed first time or after package changes
 
 # Start the development server
-
 npm run dev
+```
 -> Open the URL shown in the terminal (usually http://localhost:5173)
